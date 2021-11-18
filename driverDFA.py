@@ -1,16 +1,22 @@
-from DFA import DFA, Transition, State
+from DFA import DFA
 
-q1 = State("Q1", False)
-q2 = State("Q2", True)
-q3 = State("Q3", True)
+q0 = 0
+q1 = 1
+q2 = 2
+Ø = 3
 
-t1 = Transition(q1, q2, 'a')
-t2 = Transition(q1, q3, 'b')
-t3 = Transition(q2, q2, 'a')
-t4 = Transition(q3, q3, 'b')
+Q = set((q0, q1, q2, Ø))
+q = q0
+sigma = set(('a', 'b'))
+F = set((q1, q2))
 
-transitions = {t1, t2, t3, t4}
+transitions = { q0 : {'a':q1, 'b':q2},
+		q1 : {'a':q1, 'b':Ø},
+		q2 : {'a':Ø, 'b':q2},
+		Ø  : {'a':Ø, 'b':Ø}}
 
-dfa = DFA(transitions, q1)
-print(dfa.Eval("a"))
-dfa.Draw()
+dfa = DFA(Q, sigma, q, F, transitions)
+
+print(dfa.Eval())
+print(dfa.Accept('aaaaaaaa'))
+dfa.Draw('DFA')

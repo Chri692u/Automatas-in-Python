@@ -1,66 +1,71 @@
 import os
 
-class State:
-	def __init__(self, label, isAccepting):
-		self.Label = label
-		self.AcceptState = isAccepting
-
-class Transition:
-	def __init__(self, fromState, toState, condition):
-		self.To = toState
-		self.From = fromState
-		self.Condition = condition
-	
-	def Eval(self, input):
-		if self.Condition == input:
-			return True
-		else:
-			return False
-	
 class DFA:
-	def __init__(self, transitions, startState):
-		self.StartState = startState
-		self.Transitions = transitions
+	def __init__(self, Q, sigma, q, F, delta):
+		self.Q = Q #A finite set of states
+		self.Symbols = sigma #A set of input symbols
+		self.Start = q #An initial state
+		self.Final = F #A set of final states
+		self.Delta = delta #Transition functions implemented as a dictionary of hashmaps
  	
-	def Eval(self, inputString):
-		accepted = False
-		#Find start states transition
-		for t in self.Transitions:
-			if t.From.Label == self.StartState.Label:
-				currentTransition = t
-				currentState = currentTransition.From
-				break
-		
-		#Test currentTransition with input string
-		for i in range(len(inputString)):
-			for t in self.Transitions:
-				if t.Eval(inputString[i]) and (currentTransition.From.Label == currentState.Label):
-					#Update current transition and state
-					currentTransition = t
-					currentState = currentTransition.To
+	def Eval(self):
+		valid = False
+		empty = set()
 
-					if currentState.AcceptState == True:
-						accepted = True
-						break
+		#If no final states or states at all
+		if self.Final == empty or self.Q == empty:
+			print("DFA invalid")
+			return False
 
-				else:
-					accepted = False
+		#If each state can transition on every symbol in sigma
+		for key in self.Delta:
+			transition = self.Delta[key]
+			transitionSpace = set()
+			for sym in transition:
+				transitionSpace.add(sym)
+
+			if transitionSpace == self.Symbols:
+				valid = True
+			else:
+				return False
 		
-		return accepted
-	
-	def Draw(self):
+		return valid
+
+	def Accept(self, inputString):
+		if not self.Eval():
+			return
+		
+		currentState = self.Start
+		for i in inputString:
+			currentState = self.Delta[currentState][i]
+		return currentState in self.Final
+
+	def Draw(self, filename):
+		#Only draw if DFA is valid
+		if not self.Eval():
+			print("DFA invalid")
+			return
+
 		#Make .dot string
 		s = "Digraph DFA {\n"
-		for t in self.Transitions:
-			if t.From.Label == self.StartState.Label:
-				s = s + f"{t.From.Label} [shape=circle style=filled fillcolor=lightblue]\n"
-			if t.To.AcceptState == True:
-				s  = s + f"{t.To.Label} [shape=doublecircle]\n"
-
-			s = s + f"{t.From.Label} -> {t.To.Label} [label=\"{t.Condition}\"]\n"
+		#Draw states
+		for state in self.Q:
+			if state == self.Start:
+				s = s + f"{self.Start} [shape=circle style=filled fillcolor=lightblue]\n"
+			else:
+				s  = s + f"{state} [shape=circle]\n"
+		#Special case for final states
+		for f in self.Final:
+			s  = s + f"{f} [shape=doublecircle]\n"
+		
+		#Draw transitions
+		for state in self.Delta:
+			for sym in self.Symbols:
+				s = s + f"{state} -> {self.Delta[state][sym]} [label=\"{sym}\"]\n"
 		s = s + "}"
 
 		#Make svg file
 		os.system(f"echo '{s}' > DFA.dot")
-		os.system(f"dot -Tsvg DFA.dot > out.svg")
+		os.system(f"dot -Tsvg DFA.dot > {filename}.svg")
 		os.system("rm DFA.dot")
+		
