@@ -33,7 +33,7 @@ class DFA:
 
 	def Accept(self, inputString):
 		if not self.Eval():
-			return
+			return False
 		
 		currentState = self.Start
 		for i in inputString:
@@ -43,8 +43,7 @@ class DFA:
 	def Draw(self, filename):
 		#Only draw if DFA is valid
 		if not self.Eval():
-			print("DFA invalid")
-			return
+			return False
 
 		#Make .dot string
 		s = "Digraph DFA {\n"
@@ -69,3 +68,4 @@ class DFA:
 		os.system(f"dot -Tsvg DFA.dot > {filename}.svg")
 		os.system("rm DFA.dot")
 		
+		return True
